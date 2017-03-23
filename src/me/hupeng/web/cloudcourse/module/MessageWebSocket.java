@@ -15,6 +15,11 @@ import javax.websocket.server.ServerEndpoint;
 
 import org.nutz.ioc.loader.annotation.IocBean;
 
+/**
+ * 处理房间的消息的Socket服务类.<br>
+ * 注意:部署的时候JDK版本必须大于等于1.8,Tomcat版本必须大于等于8.
+ * @author HUPENG
+ * */
 @ServerEndpoint(value = "/websocket")
 @IocBean(singleton = true)
 public class MessageWebSocket {
@@ -43,12 +48,24 @@ public class MessageWebSocket {
     	System.out.println("会话："+ session.getId() + " 发生错误");
     	onClose(session, null);
     }
-    
    
+    /**
+     * 收到消息之后的调用此方法.<br>
+     * 暂定上传的消息格式类似于:<br>
+     * {"room_id":1,"msg":"this is a test message","time":3}<br>
+     * 消息格式为Json格式,其中time字段为发送此信息时视频的时间轴信息,以秒计.<br>
+     * @author		HUPENG
+     * @version		0.0.1
+     * @param		message	浏览器端上传的消息
+     * @param		session	标识浏览器端的session对象
+     * @exception	IOException 在发送消息的时候可能发生的输入输出异常
+     * @return		void
+     * */
 	@OnMessage
 	public void onMessage(String message, Session session) throws IOException,
 			InterruptedException {
 		System.out.println("收到 会话: " + session.getId() + " 的消息（" + message + "）");
+		
 		
 		for (String key : sessions.keySet()){
 			try {
@@ -57,24 +74,5 @@ public class MessageWebSocket {
 				e.printStackTrace();
 			};
 		}
-//		// Print the client message for testing purposes
-//		System.out.println("Received: " + message);
-//
-//		// Send the first message to the client
-//		session.getBasicRemote().sendText("This is the first server message");
-//
-//		// Send 3 messages to the client every 5 seconds
-//		int sentMessages = 0;
-//		while (sentMessages < 3) {
-//			session.getBasicRemote().sendText(
-//					"This is an intermediate server message. Count: "
-//							+ sentMessages);
-//			sentMessages++;
-//		}
-//		
-//		// Send a final message to the client
-//		session.getBasicRemote().sendText("This is the last server message");
-		
-		
 	}
 }

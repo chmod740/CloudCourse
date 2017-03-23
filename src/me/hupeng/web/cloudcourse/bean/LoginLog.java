@@ -20,16 +20,37 @@ public class LoginLog {
 	@Column("password")
 	private String password;
 	
+	@Column("ip_address")
+	private String ipAddress;
+	
+	@Column("ip_location")
+	private String ipLocation;
+	
 	@Column("login_time")
 	private Date loginTime;
 	
 	/**
 	 * 登录结果
-	 * 1:代表登录成功
-	 * 其他数字:代表登录失败
+	 * 0:代表登录成功
+	 * 非0:代表登录失败
 	 * */
 	@Column("login_result")
 	private int loginResult;
+
+	public LoginLog(){
+		
+	}
+	
+	public LoginLog(String username, String password, String ipAddress,
+			String ipLocation, Date loginTime, int loginResult) {
+		super();
+		this.username = username;
+		this.password = password;
+		this.ipAddress = ipAddress;
+		this.ipLocation = ipLocation;
+		this.loginTime = loginTime;
+		this.loginResult = loginResult;
+	}
 
 	public int getId() {
 		return id;
