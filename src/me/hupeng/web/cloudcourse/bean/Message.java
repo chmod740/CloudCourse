@@ -28,6 +28,22 @@ public class Message {
 	
 	@Column("send_time")
 	private Date sendTime;
+	
+	public Message(){
+		
+	}
+	
+	public Message(int courseId, int userId, int videoTime, String message,
+			Date sendTime) {
+		super();
+		this.courseId = courseId;
+		this.userId = userId;
+		this.videoTime = videoTime;
+		this.message = message;
+		this.sendTime = sendTime;
+	}
+
+
 
 	public int getId() {
 		return id;
