@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import javax.websocket.Session;
 
 import me.hupeng.ipLocationService.IpLocationResult;
@@ -48,7 +49,7 @@ public class PublicModule {
 	@Ok("json:{locked:'^id$|^password$'}")
 	@Fail("http:403")
 	@At("login")
-	public Object login(HttpServletRequest request,@Param("username")String username, @Param("password")String password){
+	public Object login(HttpServletRequest request, HttpSession session,@Param("username")String username, @Param("password")String password){
 		Map<String , Object>result = new LinkedHashMap<>();
 		
 		String ipAddress = request.getRemoteAddr();
@@ -61,11 +62,25 @@ public class PublicModule {
 			result.put("mag", "ok");
 			result.put("data", user);
 			dao.insert(new LoginLog(username, password, request.getRemoteAddr(), ipLocation, new Date(System.currentTimeMillis()), 0));
+			session.setAttribute("user_id", user.getId());
+			session.setAttribute("username", user.getUsername());
+			session.setAttribute("user_privilege", user.getPrivilege());
 		}else {
 			result.put("state", -1);
 			result.put("msg", "username or password incorrect");
 			dao.insert(new LoginLog(username, password, request.getRemoteAddr(), ipLocation, new Date(System.currentTimeMillis()), -1));
 		}
 		return result;
+	}
+	
+	/**
+	 * 建立一个默认的首页
+	 * */
+	@At("index")
+	@Ok("re")
+	@Fail("http:500")
+	public String index(){
+		
+		return "jsp:text";
 	}
 }
