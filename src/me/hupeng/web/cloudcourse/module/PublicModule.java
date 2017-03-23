@@ -81,6 +81,6 @@ public class PublicModule {
 	@Fail("http:500")
 	public String index(){
 		
-		return "jsp:text";
+		return "jsp:test";
 	}
 }

@@ -50,7 +50,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
     }
  
     function start() {
-      webSocket.send('hello');
+      webSocket.send('');
       return false;
     }
   </script>

@@ -66,6 +66,8 @@ public class MessageWebSocket {
 	@OnClose
 	public void onClose(Session session, CloseReason closeReason){
 		sessions.remove(session.getId());
+		courses.remove(session.getId());
+		httpSessions.remove(session.getId());
 		System.out.println("会话："+ session.getId() + " 离开服务器");
 	}
 	
@@ -101,31 +103,32 @@ public class MessageWebSocket {
 		String action = json.get("action").getAsString();
 		
 		switch (action) {
-		case "in_course":
-			int courseId = json.get("course_id").getAsInt();
-			courses.put(session.getId(), courseId);
-			break;
-		case "send_msg":
-			courseId = json.get("room_id").getAsInt();
-			String msg = json.get("msg").getAsString();
-			int videoTime = json.get("video_time").getAsInt();
-//			Message messageBean = new Message(courseId, userId, videoTime, message, sendTime)
-			Message messageBean = new Message(courseId, (Integer)httpSessions.get(session.getId()).getAttribute("user_id"), videoTime, msg, new Date(System.currentTimeMillis()));
-			dao.insert(messageBean);
-			break;
-		default:
-			break;
-		}
-		
-		
-		
-		
-		for (String key : sessions.keySet()){
-			try {
-				sessions.get(key).getBasicRemote().sendText(session.getId() + ":" + message);
-			} catch (IOException e) {
-				e.printStackTrace();
-			};
+			case "in_course":
+				int courseId = json.get("course_id").getAsInt();
+				courses.put(session.getId(), courseId);
+				break;
+			case "send_msg":
+				courseId = json.get("room_id").getAsInt();
+				String msg = json.get("msg").getAsString();
+				int videoTime = json.get("video_time").getAsInt();
+	//			Message messageBean = new Message(courseId, userId, videoTime, message, sendTime)
+				Message messageBean = null;
+				
+				try {
+					messageBean = new Message(courseId, (Integer)httpSessions.get(session.getId()).getAttribute("user_id"), videoTime, msg, new Date(System.currentTimeMillis()));
+				} catch (Exception e) {
+					messageBean = new Message(courseId, 1, videoTime, msg, new Date(System.currentTimeMillis()));
+				}
+				dao.insert(messageBean);
+				
+				for(String key: courses.keySet()){
+					if (courses.get(key).equals(courseId) && !key.equals(session.getId())) {
+						sessions.get(key).getBasicRemote().sendText(msg);
+					}
+				}
+				break;
+			default:
+				break;
 		}
 	}
 }
