@@ -31,8 +31,7 @@ public class PublicModule {
 	@Inject
 	Dao dao;
 	
-	@Inject
-	MessageWebSocket messageWebSocket;
+
 	
 	/**
 	 * 执行用户的登录操作.<br>

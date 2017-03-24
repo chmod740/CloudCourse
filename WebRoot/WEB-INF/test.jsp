@@ -10,7 +10,10 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 </head>
 <body>
   <div>
-    <input type="submit" value="Start" onclick="start()" />
+    <input type="submit" value="打开或者刷新页面应当点击此按钮，发送进入房间请求" onclick="start()" />
+    <br><br>
+    <input id="text"/><br>
+    <input type="submit" value="发送消息" onclick="send()" />
   </div>
   <div id="messages"></div>
   <script type="text/javascript">
@@ -50,9 +53,18 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
     }
  
     function start() {
-      webSocket.send('');
+      
+      var text = document.getElementById("text").value;
+      webSocket.send('{"action": "in_course","course_id":1}');
+      return false;
+    }
+    
+    function send() { 
+      var text = document.getElementById("text").value;
+      webSocket.send('{"action":"send_msg","course_id":1,"msg":"' + text + '","video_time":3}');
       return false;
     }
   </script>
+  
 </body>
 </html>

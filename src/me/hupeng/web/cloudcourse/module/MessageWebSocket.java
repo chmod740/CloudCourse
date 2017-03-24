@@ -16,6 +16,7 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 
+import me.hupeng.web.cloudcourse.MainSetup;
 import me.hupeng.web.cloudcourse.bean.Message;
 
 import org.nutz.dao.Dao;
@@ -31,7 +32,7 @@ import com.google.gson.JsonParser;
  * @author HUPENG
  * */
 @ServerEndpoint(value = "/websocket", configurator=GetHttpSessionConfigurator.class)
-@IocBean(singleton = true)
+@IocBean
 public class MessageWebSocket {
 	
     /**
@@ -50,8 +51,8 @@ public class MessageWebSocket {
      * */
     private static ConcurrentHashMap<String, HttpSession>httpSessions  = new ConcurrentHashMap<>();
     
-    @Inject
-    Dao dao;
+
+    Dao dao = MainSetup.ioc.get(Dao.class);
     
 	@OnOpen
 	public void onOpen(Session session, EndpointConfig config) {
@@ -83,8 +84,7 @@ public class MessageWebSocket {
      * 收到消息之后的调用此方法向房间内的其他主机发送消息.<br>
      * 暂定上传的消息格式类似于:<br>
      * 主机进入房间：{"action": "in_course","course_id":1}
-     * 发送消息：{"action":"send_msg","course_id":1,"msg":"this is a test message","video_time":3}<br>
-     * 
+     * 主机发送消息：{"action":"send_msg","course_id":1,"msg":"this is a test message","video_time":3}<br>
      * 消息格式为Json格式,其中time字段为发送此信息时视频的时间轴信息,以秒计.<br>
      * @author		HUPENG
      * @version		0.0.1
@@ -108,12 +108,11 @@ public class MessageWebSocket {
 				courses.put(session.getId(), courseId);
 				break;
 			case "send_msg":
-				courseId = json.get("room_id").getAsInt();
+				courseId = json.get("course_id").getAsInt();
 				String msg = json.get("msg").getAsString();
 				int videoTime = json.get("video_time").getAsInt();
-	//			Message messageBean = new Message(courseId, userId, videoTime, message, sendTime)
+//				Message messageBean = new Message(courseId, userId, videoTime, message, sendTime)
 				Message messageBean = null;
-				
 				try {
 					messageBean = new Message(courseId, (Integer)httpSessions.get(session.getId()).getAttribute("user_id"), videoTime, msg, new Date(System.currentTimeMillis()));
 				} catch (Exception e) {
