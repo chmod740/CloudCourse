@@ -3,7 +3,9 @@ package me.hupeng.web.cloudcourse.module;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.HttpSession;
@@ -18,11 +20,16 @@ import javax.websocket.server.ServerEndpoint;
 
 import me.hupeng.web.cloudcourse.MainSetup;
 import me.hupeng.web.cloudcourse.bean.Message;
+import me.hupeng.web.cloudcourse.bean.MessageJsonModule;
+import me.hupeng.web.cloudcourse.bean.User;
 
+import org.nutz.dao.Cnd;
 import org.nutz.dao.Dao;
 import org.nutz.ioc.loader.annotation.Inject;
 import org.nutz.ioc.loader.annotation.IocBean;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -108,6 +115,12 @@ public class MessageWebSocket {
 				courses.put(session.getId(), courseId);
 				break;
 			case "send_msg":
+//				try {
+//					int userId = (Integer)httpSessions.get(session.getId()).getAttribute("user_id");
+//				} catch (Exception e) {
+//					return;
+//				}
+				
 				courseId = json.get("course_id").getAsInt();
 				String msg = json.get("msg").getAsString();
 				int videoTime = json.get("video_time").getAsInt();
@@ -120,9 +133,34 @@ public class MessageWebSocket {
 				}
 				dao.insert(messageBean);
 				
+			    Gson gson = new GsonBuilder()  
+	            // 设置日期时间格式，另有2个重载方法  
+	            // 在序列化和反序化时均生效  
+	            .setDateFormat("yyyy-MM-dd HH:mm:ss")  
+	            // 禁此序列化内部类  
+	            .disableInnerClassSerialization()  
+	            //禁止转义html标签  
+	            .disableHtmlEscaping()  
+	            //格式化输出  
+	            .setPrettyPrinting()  
+	            .create();  
 				for(String key: courses.keySet()){
 					if (courses.get(key).equals(courseId) && !key.equals(session.getId())) {
-						sessions.get(key).getBasicRemote().sendText(msg);
+						Map<String, Object>msgMap = new LinkedHashMap<>();
+						msgMap.put("action", "receive_msg");
+						msgMap.put("message", new MessageJsonModule(messageBean));
+						try {
+							
+							User user = dao.fetch(User.class, Cnd.where("id", "=",(Integer)httpSessions.get(session.getId()).getAttribute("user_id")));
+//							User user = dao.fetch(User.class, Cnd.where("id", "=",1));
+							user.setPassword(null);
+							msgMap.put("user", user);
+						} catch (Exception e) {
+							// TODO: handle exception
+							msgMap.put("user", null);
+						}
+//						System.out.println("**************\n" + gson.toJson(msgMap));
+						sessions.get(key).getBasicRemote().sendText(gson.toJson(msgMap));
 					}
 				}
 				break;

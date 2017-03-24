@@ -1,4 +1,5 @@
 var ioc = {
+
         dataSource : {
             type : "com.alibaba.druid.pool.DruidDataSource",
             events : {
