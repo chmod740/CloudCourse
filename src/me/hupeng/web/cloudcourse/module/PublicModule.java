@@ -22,10 +22,15 @@ import org.nutz.ioc.loader.annotation.IocBean;
 import org.nutz.lang.Each;
 import org.nutz.lang.util.NutMap;
 import org.nutz.mvc.annotation.At;
+import org.nutz.mvc.annotation.By;
 import org.nutz.mvc.annotation.Fail;
+import org.nutz.mvc.annotation.Filters;
 import org.nutz.mvc.annotation.Ok;
 import org.nutz.mvc.annotation.Param;
+import org.nutz.mvc.filter.CheckSession;
 
+
+@Filters(@By(type=CheckSession.class, args={"user_id", "/html/login.php"}))
 @IocBean
 public class PublicModule {
 	@Inject
@@ -45,10 +50,11 @@ public class PublicModule {
 	 * 			失败样例1：{"state":-1,"msg":"username or password incorrect"}<br>
 	 * 			失败样例2：
 	 * */
-	@Ok("json:{locked:'^id$|^password$'}")
+	@Ok("json:{locked:'password|id'}")
 	@Fail("http:403")
 	@At("login")
-	public Object login(HttpServletRequest request, HttpSession session,@Param("username")String username, @Param("password")String password){
+	@Filters
+	public Object loginJson(HttpServletRequest request, HttpSession session,@Param("username")String username, @Param("password")String password){
 		Map<String , Object>result = new LinkedHashMap<>();
 		
 		String ipAddress = request.getRemoteAddr();
@@ -70,6 +76,42 @@ public class PublicModule {
 			dao.insert(new LoginLog(username, password, request.getRemoteAddr(), ipLocation, new Date(System.currentTimeMillis()), -1));
 		}
 		return result;
+	}
+	
+	@Ok("re")
+	@Fail("http:403")
+	@At("html/login")
+	@Filters
+	public Object loginHtml(HttpServletRequest request, HttpSession session,@Param("username")String username, @Param("password")String password){
+		if (username == null || password == null) {
+			return "jsp:/html/login";
+		}
+		String ipAddress = request.getRemoteAddr();
+		IpLocationResult ipLocationResult = new  IpLocationService().getIpLocationResult(ipAddress);
+		String ipLocation = ipLocationResult.getCountry() + " " + ipLocationResult.getProvince() + " " + ipLocationResult.getCity();
+		User user = dao.fetch(User.class, Cnd.where("username", "=", username).and("password", "=", password));
+		if (username != null && password != null &&!(user == null)) {
+
+			dao.insert(new LoginLog(username, password, request.getRemoteAddr(), ipLocation, new Date(System.currentTimeMillis()), 0));
+			session.setAttribute("user_id", user.getId());
+			session.setAttribute("username", user.getUsername());
+			session.setAttribute("user_privilege", user.getPrivilege());
+			return "redirect:/html/index.php";
+		}else {
+
+			dao.insert(new LoginLog(username, password, request.getRemoteAddr(), ipLocation, new Date(System.currentTimeMillis()), -1));
+			
+			request.setAttribute("message", "用户名或者密码错误");
+			return "jsp:/html/login";
+		}
+//		return result;
+	}
+	
+	@At("html/index")
+	@Ok("re")
+	@Fail("http:500")
+	public String indexHtml(){
+		return "jsp:/html/index";
 	}
 	
 	/**
