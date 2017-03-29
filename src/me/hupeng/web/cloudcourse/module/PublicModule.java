@@ -121,7 +121,7 @@ public class PublicModule {
 	@Ok("re")
 	@Fail("http:500")
 	public String index(){
-		
-		return "jsp:test";
+		return ">>:/html/index.php";
 	}
+	
 }
